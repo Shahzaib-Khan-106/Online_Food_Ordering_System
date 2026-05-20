@@ -127,7 +127,6 @@ $result = mysqli_query($conn, $query);
     </div>
 
     <!-- Pagination -->
-        <!-- Pagination -->
     <?php if ($totalPages > 1) { ?>
       <nav>
         <ul class="pagination justify-content-center">
@@ -159,7 +158,6 @@ $result = mysqli_query($conn, $query);
         </ul>
       </nav>
     <?php } ?>
-
   </div>
 
   <!-- Bootstrap JS -->
