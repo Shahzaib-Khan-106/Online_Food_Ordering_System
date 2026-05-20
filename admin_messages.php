@@ -8,44 +8,27 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit();
 }
 
-// ✅ Allow only normal admins to add items
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    die("Access denied. Only normal admins can add menu items.");
+// ✅ Allow both admins and superadmins to view messages
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin','superadmin'])) {
+    die("Access denied. Only admins and superadmins can view contact messages.");
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name'];
-    $description = $_POST['description'];
-    $price = $_POST['price'];
-    $category = $_POST['category'];
-
-    // Handle image upload
-    $image = $_FILES['image']['name'];
-    $target = "images/" . basename($image);
-
-    // Insert into database
-    $query = "INSERT INTO menu_items (name, description, price, category, image)
-              VALUES ('$name', '$description', '$price', '$category', '$image')";
-
-    if (mysqli_query($conn, $query)) {
-        move_uploaded_file($_FILES['image']['tmp_name'], $target);
-        echo "<div class='alert alert-success text-center'>Item added successfully!</div>";
-    } else {
-        echo "<div class='alert alert-danger text-center'>Error: " . mysqli_error($conn) . "</div>";
-    }
-}
+// Fetch all contact messages
+$query = "SELECT * FROM contact_messages ORDER BY created_at DESC";
+$result = mysqli_query($conn, $query);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add Menu Item</title>
+  <title>Admin - Contact Messages</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body style="background-color:#f8f9fa;">
 
-<!-- Admin Navbar -->
+  <!-- Navbar -->
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-success">
   <div class="container-fluid">
     <a class="navbar-brand" href="admin_dashboard.php">Admin Panel</a>
@@ -95,39 +78,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   </div>
 </nav>
 
-<div class="container mt-5">
-  <h2 class="text-center mb-4">Add New Menu Item</h2>
-  <form method="POST" enctype="multipart/form-data" class="shadow p-4 bg-white rounded">
-    <div class="mb-3">
-      <label class="form-label">Food Name</label>
-      <input type="text" name="name" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Description</label>
-      <textarea name="description" class="form-control" rows="3" required></textarea>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Price ($)</label>
-      <input type="number" name="price" step="0.01" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Category</label>
-      <select name="category" class="form-select" required>
-        <option value="Pizza">Pizza</option>
-        <option value="Burger">Burger</option>
-        <option value="Drink">Drink</option>
-        <option value="Side">Side</option>
-        <option value="Dessert">Dessert</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Image</label>
-      <input type="file" name="image" class="form-control" accept="image/*" required>
-    </div>
-    <button type="submit" class="btn btn-success w-100">Add Item</button>
-  </form>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Messages Table -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Contact Messages</h2>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <table class="table table-bordered table-striped">
+          <thead class="table-success">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Subject</th>
+              <th>Message</th>
+              <th>Received At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php while($row = mysqli_fetch_assoc($result)) { ?>
+              <tr>
+                <td><?php echo $row['id']; ?></td>
+                <td><?php echo htmlspecialchars($row['name']); ?></td>
+                <td><?php echo htmlspecialchars($row['email']); ?></td>
+                <td><?php echo htmlspecialchars($row['subject']); ?></td>
+                <td><?php echo nl2br(htmlspecialchars($row['message'])); ?></td>
+                <td><?php echo $row['created_at']; ?></td>
+              </tr>
+            <?php } ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
